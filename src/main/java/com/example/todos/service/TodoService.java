@@ -1,9 +1,12 @@
 package com.example.todos.service;
 
 import com.example.todos.model.Todo;
+import com.example.todos.model.User;
 import com.example.todos.repository.TodoRepository;
+import com.example.todos.repository.UserRepository;
 import com.example.todos.todoInputDto.TodoUserRequest;
 import com.example.todos.todoResponseDto.TodoResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,12 +22,19 @@ public class TodoService {
         this.todoRepository = todoRepository;
     }
 
-    public TodoResponse createTodo(TodoUserRequest dto){
+    @Autowired
+    private UserRepository userRepository;
+
+    public TodoResponse createTodo(TodoUserRequest dto, Long userId){
+
+        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
+
         Todo todo = new Todo();
         todo.setTask_name(dto.getTask_name());
         todo.setDescription(dto.getDescription());
         todo.setDate(LocalDate.now());
         todo.setCompleted(false);
+        todo.setUser(user);
 
         Todo saved = todoRepository.save(todo);
 
@@ -37,8 +47,8 @@ public class TodoService {
 
     }
 
-    public List<TodoResponse> getAll() {
-        List<Todo> todos = todoRepository.findAll();
+    public List<TodoResponse> getAll(Long userId) {
+        List<Todo> todos = todoRepository.findByUserId(userId);
         List<TodoResponse> responseList = new ArrayList<>();
 
         for (Todo todo : todos) {
